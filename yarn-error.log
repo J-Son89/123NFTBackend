@@ -1,0 +1,57 @@
+Arguments: 
+  /Users/jamiecaprani/.nvm/versions/node/v14.18.1/bin/node /Users/jamiecaprani/.nvm/versions/node/v14.18.1/bin/yarn
+
+PATH: 
+  /Users/jamiecaprani/opt/anaconda3/bin:/Users/jamiecaprani/opt/anaconda3/condabin:/Users/jamiecaprani/.nix-profile/bin:/Users/jamiecaprani/.local/bin:/Users/jamiecaprani/.nvm/versions/node/v14.18.1/bin:/Users/jamiecaprani/.cabal/bin:/Users/jamiecaprani/.ghcup/bin:~/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+Yarn version: 
+  1.22.17
+
+Node version: 
+  14.18.1
+
+Platform: 
+  darwin x64
+
+Trace: 
+  TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received [Object: null prototype]
+      at new NodeError (internal/errors.js:322:7)
+      at validateString (internal/validators.js:124:11)
+      at Object.isAbsolute (path.js:1133:5)
+      at module.exports.exports.default (/Users/jamiecaprani/.nvm/versions/node/v14.18.1/lib/node_modules/yarn/lib/cli.js:101158:16)
+      at /Users/jamiecaprani/.nvm/versions/node/v14.18.1/lib/node_modules/yarn/lib/cli.js:51703:63
+      at Generator.next (<anonymous>)
+      at step (/Users/jamiecaprani/.nvm/versions/node/v14.18.1/lib/node_modules/yarn/lib/cli.js:310:30)
+      at /Users/jamiecaprani/.nvm/versions/node/v14.18.1/lib/node_modules/yarn/lib/cli.js:321:13
+
+npm manifest: 
+  {
+    "name": "dark-chess-server",
+    "version": "1.0.0",
+    "description": "sorts the shtuff out",
+    "main": "index.js",
+    "scripts": {
+      "test": "tests?",
+      "start": "node server"
+    },
+    "author": "JC",
+    "license": "ISC",
+    "dependencies": {
+      "body-parser": "^1.19.0",
+      "cors": "^2.8.5",
+      "crypto": "^1.0.1",
+      "engines": {
+        "node": "10.13.0"
+      },
+      "express": "^4.17.1",
+      "lodash": "^4.17.15",
+      "querystring": "^0.2.0",
+      "socket.io": "^2.3.0"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
