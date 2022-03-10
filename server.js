@@ -9,9 +9,12 @@ const cors = require("cors");
 const fs = require("fs");
 const http = require("http");
 const { generateUploadURL, getURLPrefix } = require("./s3");
+const { addOrderDataToDatabase } = require("./database");
+const stripe = require('stripe');
 
-// const io = require("socket.io")(http);
-// io.set("origins", "*:*");
+
+const endpointSecret = "whsec_77d252ab0fc0973c4752267502b7a2aa7b922601408e0c7ffb563073e3ee2a5a";
+
 
 const port = process.env.PORT || 5000;
 
@@ -47,6 +50,42 @@ app.get("/getURLForFileUpload", async (req, res) => {
   const url = await generateUploadURL(fileName);
 
   res.send({ url });
+});
+
+app.post("/setCustomerOrderToQuoted", async (req, res) => {
+  const data = req.data;
+  const response = await addOrderDataToDatabase(data)
+
+  res.send({ response });
+});
+
+app.post('/webhook', express.raw({type: 'application/json'}), (request, response) => {
+  const sig = request.headers['stripe-signature'];
+
+  let event;
+  console.log('22222sdas')
+
+  try {
+    event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+  } catch (err) {
+    response.status(400).send(`Webhook Error: ${err.message}`);
+    return;
+  }
+  console.log('dasdasdas')
+  // Handle the event
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      const paymentIntent = event.data.object;
+      console.log('hallo', paymentIntent)
+      // Then define and call a function to handle the event payment_intent.succeeded
+      break;
+    // ... handle other event types
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  // Return a 200 response to acknowledge receipt of the event
+  response.send();
 });
 
 const server = http.createServer({}, app).listen(port, () => {
