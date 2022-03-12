@@ -3,18 +3,17 @@ const app = express();
 const { set, get, cloneDeep, findIndex } = require("lodash");
 const { generateKey } = require("./util");
 const querystring = require("query-string");
-const router = express.Router();
-var bodyParser = require("body-parser");
+const bodyParser = require("body-parser");
 const cors = require("cors");
 const fs = require("fs");
 const http = require("http");
 const { generateUploadURL, getURLPrefix } = require("./s3");
-const { addOrderDataToDatabase } = require("./database");
-const stripe = require('stripe');
+// const { addOrderDataToDatabase } = require("./database");
+const stripe = require('stripe')('sk_test_51KQCr8Evk7QqcYLkQ3zj2bLMder2CwEeDg4aJrNLSoM8jF7mBFCSY7S8OJb0bqCOsod5N3Uk4HlBLnv00scsRRvf00iI6EhoEy')
 
 
-const endpointSecret = "whsec_77d252ab0fc0973c4752267502b7a2aa7b922601408e0c7ffb563073e3ee2a5a";
 
+const jsonParser = bodyParser.json()
 
 const port = process.env.PORT || 5000;
 
@@ -31,11 +30,10 @@ app.use(function (req, res, next) {
   next();
 });
 
-app.use(function (req, res, next) {
-  express.json();
-  bodyParser.json();
-  next();
-});
+app.use(bodyParser.json({ limit: '50mb' }));
+
+const router = express.Router();
+
 
 app.get("/getURLPrefix", async (req, res) => {
   const urlPrefix = await getURLPrefix();
@@ -59,34 +57,58 @@ app.post("/setCustomerOrderToQuoted", async (req, res) => {
   res.send({ response });
 });
 
-app.post('/webhook', express.raw({type: 'application/json'}), (request, response) => {
-  const sig = request.headers['stripe-signature'];
 
-  let event;
-  console.log('22222sdas')
+app.post('/createCheckoutSession', async (req, res) => {
+  const orderDetails = req.body
+  console.log(req.body, '======')
 
-  try {
-    event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
-  } catch (err) {
-    response.status(400).send(`Webhook Error: ${err.message}`);
-    return;
-  }
-  console.log('dasdasdas')
-  // Handle the event
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-      const paymentIntent = event.data.object;
-      console.log('hallo', paymentIntent)
-      // Then define and call a function to handle the event payment_intent.succeeded
-      break;
-    // ... handle other event types
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
+  collectionDetails: { collectionName: 'Katz', creator: 'James', totalImages: 2000 }
+  imageUrlsMap,
+    metadata,
+    orderDetails: {
+    metadata: { value }
+    orderID: "1a5d44600110c0706d98b9720e14b168"
 
-  // Return a 200 response to acknowledge receipt of the event
-  response.send();
-});
+    projectLayersDepth: { hair: 0, face: 1, clothes: 2, background: 3 }
+
+    uploadedFiles:
+
+
+    const { collectionDetails: { totalImages } } = req.body
+    const totalImages = get(req.body, ["collectionDetails", "totalImages"])
+    const collectionName = get(req.body, ["collectionDetails", "collectionName"])
+    const creatorName = get(req.body, ["collectionDetails", "creator"])
+
+    const metadataFormat = get(req.body, ["orderDetails", "metadata", "value"])
+    const metadata = get(req.body, 'metadata')
+
+
+    const id = get(req.body, 'orderID')
+    
+    const session = await stripe.checkout.sessions.create({
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'T-shirt',
+            },
+            unit_amount: 2000,
+          },
+          quantity: 1,
+        },
+      ],
+      client_reference_id: '',
+      mode: 'payment',
+      success_url: 'https://123-nft.io',
+      cancel_url: 'https://123-nft.io',
+
+    });
+    console.log(session)
+    res.redirect(303, session.url);
+  });
+
+
 
 const server = http.createServer({}, app).listen(port, () => {
   console.log("server running at " + port);
