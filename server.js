@@ -8,12 +8,22 @@ const cors = require("cors");
 const fs = require("fs");
 const http = require("http");
 const { generateUploadURL, getURLPrefix } = require("./s3");
-// const { addOrderDataToDatabase } = require("./database");
-const stripe = require('stripe')('sk_test_51KQCr8Evk7QqcYLkQ3zj2bLMder2CwEeDg4aJrNLSoM8jF7mBFCSY7S8OJb0bqCOsod5N3Uk4HlBLnv00scsRRvf00iI6EhoEy')
+const {
+  addOrderDataToDatabase,
+  markDatabaseOrderAsCancelled,
+  markDatabaseOrderAsPaid,
+  markDatabaseOrderAsDelivered,
+} = require("./database");
+const { createStripeSession } = require("./stripe");
+const dotenv = require("dotenv");
 
+dotenv.config();
 
+const stripe = require("stripe")(
+  "sk_test_51KQCr8Evk7QqcYLkQ3zj2bLMder2CwEeDg4aJrNLSoM8jF7mBFCSY7S8OJb0bqCOsod5N3Uk4HlBLnv00scsRRvf00iI6EhoEy"
+);
 
-const jsonParser = bodyParser.json()
+const jsonParser = bodyParser.json();
 
 const port = process.env.PORT || 5000;
 
@@ -30,10 +40,7 @@ app.use(function (req, res, next) {
   next();
 });
 
-app.use(bodyParser.json({ limit: '50mb' }));
-
 const router = express.Router();
-
 
 app.get("/getURLPrefix", async (req, res) => {
   const urlPrefix = await getURLPrefix();
@@ -41,74 +48,118 @@ app.get("/getURLPrefix", async (req, res) => {
   res.send({ urlPrefix });
 });
 
-app.get("/getURLForFileUpload", async (req, res) => {
-  const params = req.url.split("?");
-  const fileName = params[1];
-  console.log(fileName);
-  const url = await generateUploadURL(fileName);
+app.get(
+  "/getURLForFileUpload",
+  bodyParser.json({ limit: "5mb" }),
+  async (req, res) => {
+    const params = req.url.split("?");
+    const fileName = params[1];
+    const url = await generateUploadURL(fileName);
 
-  res.send({ url });
-});
+    res.send({ url });
+  }
+);
 
-app.post("/setCustomerOrderToQuoted", async (req, res) => {
-  const data = req.data;
-  const response = await addOrderDataToDatabase(data)
+app.post(
+  "/createCheckoutSession",
+  bodyParser.json({ limit: "50mb" }),
+  async (req, res) => {
+    const totalImages = get(req.body, ["collectionDetails", "totalImages"]);
+    const metadataFormat = get(req.body, ["orderDetails", "metadata", "value"]);
+    const orderID = get(req.body, "orderID");
 
-  res.send({ response });
-});
+    const session = await createStripeSession(
+      totalImages,
+      metadataFormat,
+      orderID
+    );
 
+    const result = await addOrderDataToDatabase(orderID, req.body);
 
-app.post('/createCheckoutSession', async (req, res) => {
-  const orderDetails = req.body
-  console.log(req.body, '======')
+    return res.send(session);
+  }
+);
 
-  collectionDetails: { collectionName: 'Katz', creator: 'James', totalImages: 2000 }
-  imageUrlsMap,
-    metadata,
-    orderDetails: {
-    metadata: { value }
-    orderID: "1a5d44600110c0706d98b9720e14b168"
+const fulfillOrder = async (session) => {
+  const id = get(session, ["client_reference_id"]);
+  const email = get(session, ["customer_details", "email"]);
+  const customerId = get(session, ["customer"]);
 
-    projectLayersDepth: { hair: 0, face: 1, clothes: 2, background: 3 }
-
-    uploadedFiles:
-
-
-    const { collectionDetails: { totalImages } } = req.body
-    const totalImages = get(req.body, ["collectionDetails", "totalImages"])
-    const collectionName = get(req.body, ["collectionDetails", "collectionName"])
-    const creatorName = get(req.body, ["collectionDetails", "creator"])
-
-    const metadataFormat = get(req.body, ["orderDetails", "metadata", "value"])
-    const metadata = get(req.body, 'metadata')
-
-
-    const id = get(req.body, 'orderID')
-    
-    const session = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'T-shirt',
-            },
-            unit_amount: 2000,
-          },
-          quantity: 1,
-        },
-      ],
-      client_reference_id: '',
-      mode: 'payment',
-      success_url: 'https://123-nft.io',
-      cancel_url: 'https://123-nft.io',
-
-    });
-    console.log(session)
-    res.redirect(303, session.url);
+  await markDatabaseOrderAsPaid(id, {
+    customerId: customerId,
+    customerName: undefined,
+    customerEmail: email,
   });
+  console.log("Fulfilling order", session);
+};
 
+const cancelOrder = async (session) => {
+  const id = get(session, ["client_reference_id"]);
+  await markDatabaseOrderAsCancelled(id);
+  console.log("Creating order", session);
+};
 
+const emailCustomerAboutFailedPayment = (session) => {
+  console.log("Emailing customer", session);
+};
+
+app.post(
+  "/webhook",
+  bodyParser.raw({ type: "application/json" }),
+  (request, response) => {
+    const sig = request.headers["stripe-signature"];
+
+    let event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        request.body,
+        sig,
+        process.env.STRIPE_ENDPOINT_SECRET
+      );
+    } catch (err) {
+      response.status(400).send(`Webhook Error: ${err.message}`);
+    }
+    console.log(event);
+    // Handle the event
+
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object;
+
+        if (session.payment_status === "paid") {
+          fulfillOrder(session);
+        }
+
+        break;
+      }
+
+      case "checkout.session.async_payment_succeeded": {
+        const session = event.data.object;
+
+        // Fulfill the purchase...
+        fulfillOrder(session);
+
+        break;
+      }
+
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object;
+
+        // Send an email to the customer asking them to retry their order
+        emailCustomerAboutFailedPayment(session);
+
+        break;
+      }
+      case "checkout.session.expired": {
+        cancelOrder(session);
+        console.log("session expired");
+      }
+    }
+
+    response.status(200);
+  }
+);
 
 const server = http.createServer({}, app).listen(port, () => {
   console.log("server running at " + port);

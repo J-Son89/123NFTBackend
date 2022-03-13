@@ -1,8 +1,10 @@
 const aws = require("aws-sdk");
-const dotenv = require("dotenv");
 const crypto = require("crypto");
+const dotenv = require("dotenv");
+
 const { promisify } = require("util");
 const randomBytes = promisify(crypto.randomBytes);
+
 dotenv.config();
 
 const region = "us-west-2";

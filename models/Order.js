@@ -2,20 +2,21 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const orderSchema = new Schema({
+  _id: { type: String },
   orderId: {
     type: Number,
     required: true,
   },
   customerId: {
-    required: Number,
+    // required: Number,
     type: String,
   },
   customerName: {
-    required: true,
+    // required: true,
     type: String,
   },
   customerEmail: {
-    required: true,
+    // required: true,
     type: String,
   },
   orderDateTimeCreated: {
@@ -24,7 +25,7 @@ const orderSchema = new Schema({
   },
   orderStatus: {
     required: true,
-    type: ["Quoted", "Paid", "Order_Delivered"],
+    type: ["Quoted", "Paid", "Delivered", "Cancelled"],
   },
   orderDateTimeStatusLastUpdated: {
     required: true,
