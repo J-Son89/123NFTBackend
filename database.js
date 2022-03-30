@@ -3,6 +3,8 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const Order = require("./models/Order");
 dotenv.config();
 
+const PAID = "Paid";
+
 const uri = process.env.DB_URI;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -24,7 +26,7 @@ const addOrderDataToDatabase = async (orderID, orderData) => {
     orderDateTimeCreated: Date.now(),
     orderStatus: "Quoted",
     orderDateTimeStatusLastUpdated: Date.now(),
-    orderData,
+    orderData: orderData,
     _id: String(orderID),
   };
   const newOrder = new Order(orderDetails);
@@ -76,7 +78,7 @@ const markDatabaseOrderAsPaid = async (
     $set: Object.entries(updateObject).reduce(
       (acc, [key, val]) => (val ? { ...acc, [key]: val } : acc),
       {
-        orderStatus: "Paid",
+        orderStatus: PAID,
         orderDateTimeStatusLastUpdated: Date.now(),
       }
     ),
@@ -86,19 +88,29 @@ const markDatabaseOrderAsPaid = async (
       console.log(err);
     } else {
       console.log("Customer Order Paid");
-      client.close();
     }
   });
+  return collection
+    .findOne(query)
+    .then((result) => {
+      if (result) {
+        console.log(`Successfully found document: ${result}.`);
+      } else {
+        console.log("No document matches the provided query.");
+      }
+      client.close();
+
+      return result;
+    })
+    .catch((err) => {
+      client.close();
+
+      console.error(`Failed to find document: ${err}`);
+    });
 };
 
-const markDatabaseOrderAsDelivered = async (
-  orderId = "1234",
-  customerId,
-  customerName,
-  customerEmail
-) => {
+const markDatabaseOrderAsDelivered = async (orderId) => {
   const x = await client.connect();
-  const updateObject = { customerId, customerName, customerEmail };
 
   const collection = client.db("Development").collection("Orders");
   const query = {
@@ -120,9 +132,46 @@ const markDatabaseOrderAsDelivered = async (
   });
 };
 
+const getOrderDataFromDatabase = async (orderId = "1234") => {
+  const x = await client.connect();
+
+  const collection = client.db("Development").collection("Orders");
+  const query = {
+    _id: String(orderId),
+  };
+
+  return collection
+    .findOne(query)
+    .then((result) => {
+      if (result) {
+        console.log(`Successfully found document: ${result}.`);
+      } else {
+        console.log("No document matches the provided query.");
+      }
+      return result;
+    })
+    .catch((err) => console.error(`Failed to find document: ${err}`));
+};
+
+const getOpenPaidOrdersFromDatabase = async () => {
+  const x = await client.connect();
+
+  const collection = client.db("Development").collection("Orders");
+  const query = {
+    orderStatus: PAID,
+  };
+
+  const orders = await collection.find(query).toArray();
+  client.close();
+
+  return orders;
+};
+
 module.exports = {
   addOrderDataToDatabase,
   markDatabaseOrderAsCancelled,
   markDatabaseOrderAsPaid,
   markDatabaseOrderAsDelivered,
+  getOrderDataFromDatabase,
+  getOpenPaidOrdersFromDatabase,
 };

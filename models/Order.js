@@ -27,6 +27,10 @@ const orderSchema = new Schema({
     required: true,
     type: ["Quoted", "Paid", "Delivered", "Cancelled"],
   },
+  orderData: {
+    required: true,
+    type: Object,
+  },
   orderDateTimeStatusLastUpdated: {
     required: true,
     type: Date,

@@ -34,7 +34,18 @@ const generateUploadURL = async (fileName) => {
   return uploadURL;
 };
 
+const generateDownloadURL = async (key) => {
+  const params = {
+    Bucket: bucketName,
+    Key: key,
+    Expires: 7 * 24 * 60 * 60,
+  };
+  const uploadURL = await s3.getSignedUrlPromise("getObject", params);
+  return uploadURL;
+};
+
 module.exports = {
   generateUploadURL,
   getURLPrefix,
+  generateDownloadURL,
 };
