@@ -106,12 +106,14 @@ const getEmailLinkText = ({ customerId, downloadLink }) => {
 const getEmailPaymnetFailedText = ({ customerId }) => {
   return `Hi,\nThank you for ordering with 123NFT.\n\nUnfortunately your payment method failed for your order - #${customerId}.\n\n Nothing will be charged to your account but please visit https://123-nft.io to create a new order\n\n Regards, \n\n 123NFT `;
 };
+
 const fulfillOrder = async (orderData, id) => {
   const result = await fetch(`${getGeneratorEndpoint()}/generateOrder`, {
     method: "POST",
     body: JSON.stringify({ data: orderData }),
     headers: { "Content-Type": "application/json" },
   });
+  console.log("result", result);
   await markDatabaseOrderAsDelivered(id);
   const collectionName = get(
     orderData,
