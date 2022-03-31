@@ -1,11 +1,8 @@
 const express = require("express");
 const app = express();
-const { set, get, cloneDeep, findIndex } = require("lodash");
-const { generateKey } = require("./util");
-const querystring = require("query-string");
+const { get } = require("lodash");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const fs = require("fs");
 const http = require("http");
 const {
   generateUploadURL,
@@ -29,9 +26,7 @@ const { sendEmail } = require("./email");
 
 dotenv.config();
 
-const stripe = require("stripe")(
-  "sk_test_51KQCr8Evk7QqcYLkQ3zj2bLMder2CwEeDg4aJrNLSoM8jF7mBFCSY7S8OJb0bqCOsod5N3Uk4HlBLnv00scsRRvf00iI6EhoEy"
-);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const jsonParser = bodyParser.json();
 
@@ -86,33 +81,13 @@ app.post(
   }
 );
 
-const emailCustomerAboutOrderFulfilled = (email, or) => {};
+const getEmailLinkText = ({ customerId, downloadLink }) => {
+  return `Hi,\nThank you for ordering with 123NFT.\n\nYour order - #${customerId} can be downloaded at the following link: \n${downloadLink}. \n\n This link will remain valid for 7 days. \n\n Regards, \n\n 123NFT `;
+};
 
-app.post(
-  "/orderGenerated",
-  bodyParser.json({ limit: "5mb" }),
-  async (req, res) => {
-    const orderId = id;
-    const orderData = await getOrderDataFromDatabase(get(order, "_id"));
-    const { customerEmail } = orderData;
-    console.log("get link for customer", link);
-
-    console.log("email", customerEmail);
-    console.log("update database to complete", customerEmail);
-
-    // const fileName = params[1];
-    // const url = await generateUploadURL(fileName);
-
-    response.status(200);
-  }
-);
-
-const getEmailLinkText = ({customerId, downloadLink}) =>{
-  return `Hi, thank you for your ordering with 123NFT.\n Your order - ${customerId} can be download at the following link: \n${downloadLink}. \n This link will remain valid for 7 days. \n Regards, \n 123NFT `
-  
-  
-}
-
+const getEmailPaymnetFailedText = ({ customerId }) => {
+  return `Hi,\nThank you for ordering with 123NFT.\n\nUnfortunately your payment method failed for your order - #${customerId}.\n\n Nothing will be charged to your account but please visit https://123-nft.io to create a new order\n\n Regards, \n\n 123NFT `;
+};
 const fulfillOrder = async (orderData, id) => {
   const result = await fetch(`${getGeneratorEndpoint()}/generateOrder`, {
     method: "POST",
@@ -130,7 +105,10 @@ const fulfillOrder = async (orderData, id) => {
   await sendEmail({
     to: orderData.customerEmail,
     subject: "Your NFT Collection is ready",
-    text: String(downloadLink),
+    text: getEmailLinkText({
+      customerId: orderData.customerId,
+      downloadLink: String(downloadLink),
+    }),
   });
 };
 
@@ -151,19 +129,27 @@ const changeOrderToPaidAndFulfill = async (session) => {
 const cancelOrder = async (session) => {
   const id = get(session, ["client_reference_id"]);
   await markDatabaseOrderAsCancelled(id);
-  console.log("Creating order", session);
 };
 
-const emailCustomerAboutFailedPayment = (session) => {
-  console.log("Emailing customer", session);
+const emailCustomerAboutFailedPayment = async (session) => {
+  await cancelOrder(session);
+  const id = get(session, ["client_reference_id"]);
+  const email = get(session, ["customer_details", "email"]);
+  const customerId = get(session, ["customer"]);
+
+  await sendEmail({
+    to: email,
+    subject: "Payment Method Failed",
+    text: getEmailPaymnetFailedText({
+      customerId: customerId,
+    }),
+  });
 };
 
 app.post(
   "/webhook",
   bodyParser.raw({ type: "application/json" }),
   (request, response) => {
-    console.log("dsadsa");
-
     const sig = request.headers["stripe-signature"];
 
     let event;
@@ -194,29 +180,20 @@ app.post(
 
       case "checkout.session.async_payment_succeeded": {
         const session = event.data.object;
-
-        // Fulfill the purchase...
         changeOrderToPaidAndFulfill(session);
-
         break;
       }
 
       case "checkout.session.async_payment_failed": {
         const session = event.data.object;
-
-        // Send an email to the customer asking them to retry their order
         emailCustomerAboutFailedPayment(session);
-
         break;
       }
       case "checkout.session.expired": {
         const session = event.data.object;
-
         cancelOrder(session);
-        console.log("session expired");
       }
     }
-    // Return a 200 response to acknowledge receipt of the event
     response.json({ received: true });
     response.status(200);
   }
