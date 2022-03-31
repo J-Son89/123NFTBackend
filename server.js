@@ -93,7 +93,7 @@ app.post(
     );
 
     const result = await addOrderDataToDatabase(orderID, req.body);
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Origin", "https://123-nft.io");
 
     return res.send(session);
   }
