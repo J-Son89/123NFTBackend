@@ -36,6 +36,9 @@ const whitelist = ["https://123-nft.io", "https://dashboard.stripe.com/"];
 
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", whitelist);
+  const origin = req.headers.origin;
+  if (whitelist.includes(origin)) {
+      
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
