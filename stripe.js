@@ -1,5 +1,6 @@
 const { get } = require("lodash");
 const { getMetadataProduct, getImageProduct } = require("./products");
+dotenv.config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const createStripeSession = async (totalImages, metadataFormat, orderID) => {
