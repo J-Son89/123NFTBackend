@@ -57,9 +57,10 @@ const metadataProducts = {
 
 const getMetadataProduct = (key) =>
   get(
-    process.env.NODE_ENV === "production"
-      ? metadataProducts
-      : metadataProductsDev,
+    metadataProducts,
+    // process.env.NODE_ENV === "production"
+    //   ? metadataProducts
+    //   : metadataProductsDev,
     [key]
   );
 
@@ -131,8 +132,8 @@ const imagesProducts = {
 
 const getImageProduct = (key) =>
   get(
-    process.env.NODE_ENV === "production" ? imagesProducts : imagesProductsDev,
-    [key]
+    imagesProducts,
+    [key] //process.env.NODE_ENV === "production" ? imagesProducts : imagesProductsDev,
   );
 
 module.exports = {

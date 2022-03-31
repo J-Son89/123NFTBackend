@@ -6,7 +6,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const createStripeSession = async (totalImages, metadataFormat, orderID) => {
   const imageProduct = getImageProduct(String(totalImages));
   const metadataProduct = getMetadataProduct(metadataFormat);
-
+  console.log(imageProduct, metadataProduct);
   const session = await stripe.checkout.sessions.create({
     line_items: [imageProduct, metadataProduct],
     client_reference_id: orderID,
@@ -20,6 +20,7 @@ const createStripeSession = async (totalImages, metadataFormat, orderID) => {
     ],
     // expire,
   });
+  console.log(session);
   return session;
 };
 
