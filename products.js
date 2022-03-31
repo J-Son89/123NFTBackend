@@ -25,11 +25,9 @@ const metadataProducts = {
     name: "Prepare JSON Metadata",
     description:
       "You will be provided with the basic JSON metadata and will be able to use this to upload your collection for any blockchain.",
-    unit_label: "",
     images: [
       "https://files.stripe.com/links/MDB8YWNjdF8xS1FDcjhFdms3UXFjWUxrfGZsX2xpdmVfV1BKeEpaeHBXeklKemdJSk4zWUFzcDRT00n5FRb4F8",
     ],
-    statement_descriptor: "",
   },
   Ethereum: {
     currency: "USD",
@@ -38,12 +36,10 @@ const metadataProducts = {
     amount: 0,
     quantity: 500,
     name: "Prepare Ethereum Metadata",
-    unit_label: "",
     description: "Prepare NFT Metadata collection for Ethereum Blockchain.",
     images: [
       "https://files.stripe.com/links/MDB8YWNjdF8xS1FDcjhFdms3UXFjWUxrfGZsX2xpdmVfeE1WVkRLSnhVRXJnNzRaTndiT1BHc0tU00Vjup6ETk",
     ],
-    statement_descriptor: "",
   },
   Cardano: {
     currency: "USD",
@@ -52,12 +48,10 @@ const metadataProducts = {
     amount: 0,
     quantity: 500,
     name: "Prepare Cardano Metadata",
-    unit_label: "",
     description: "Prepare NFT Metadata collection for Cardano Blockchain.",
     images: [
       "https://files.stripe.com/links/MDB8YWNjdF8xS1FDcjhFdms3UXFjWUxrfGZsX2xpdmVfaXVYaFUxTHY1dXpVNkJOZ3VUN01hdkVi00CHe09sQi",
     ],
-    statement_descriptor: "",
   },
 };
 
