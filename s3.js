@@ -1,14 +1,16 @@
 const aws = require("aws-sdk");
-const dotenv = require("dotenv");
 const crypto = require("crypto");
+const dotenv = require("dotenv");
+
 const { promisify } = require("util");
 const randomBytes = promisify(crypto.randomBytes);
+
 dotenv.config();
 
 const region = "us-west-2";
 const bucketName = "123nft";
-const accessKeyId = process.env.ACCESS_KEY_ID;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+const accessKeyId = process.env.S3_ACCESS_KEY_ID;
+const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
 
 const s3 = new aws.S3({
   region,
@@ -32,7 +34,18 @@ const generateUploadURL = async (fileName) => {
   return uploadURL;
 };
 
+const generateDownloadURL = async (key) => {
+  const params = {
+    Bucket: bucketName,
+    Key: key,
+    Expires: 7 * 24 * 60 * 60,
+  };
+  const uploadURL = await s3.getSignedUrlPromise("getObject", params);
+  return uploadURL;
+};
+
 module.exports = {
   generateUploadURL,
   getURLPrefix,
+  generateDownloadURL,
 };
