@@ -30,7 +30,6 @@ const metadataProducts = {
       "https://files.stripe.com/links/MDB8YWNjdF8xS1FDcjhFdms3UXFjWUxrfGZsX2xpdmVfV1BKeEpaeHBXeklKemdJSk4zWUFzcDRT00n5FRb4F8",
     ],
     statement_descriptor: "",
-    tax_code: "txcd_10501000",
   },
   Ethereum: {
     currency: "USD",
@@ -45,7 +44,6 @@ const metadataProducts = {
       "https://files.stripe.com/links/MDB8YWNjdF8xS1FDcjhFdms3UXFjWUxrfGZsX2xpdmVfeE1WVkRLSnhVRXJnNzRaTndiT1BHc0tU00Vjup6ETk",
     ],
     statement_descriptor: "",
-    tax_code: "txcd_10501000",
   },
   Cardano: {
     currency: "USD",
@@ -60,7 +58,6 @@ const metadataProducts = {
       "https://files.stripe.com/links/MDB8YWNjdF8xS1FDcjhFdms3UXFjWUxrfGZsX2xpdmVfaXVYaFUxTHY1dXpVNkJOZ3VUN01hdkVi00CHe09sQi",
     ],
     statement_descriptor: "",
-    tax_code: "txcd_10501000",
   },
 };
 
@@ -99,7 +96,6 @@ const imagesProducts = {
     amount: 2999,
     name: "One Thousand Images",
     quantity: 1,
-    tax_code: "txcd_10501000",
   },
   2000: {
     currency: "USD",
@@ -112,7 +108,6 @@ const imagesProducts = {
     amount: 3999,
     name: "Two Thousand Images",
     quantity: 1,
-    tax_code: "txcd_10501000",
   },
   5000: {
     currency: "USD",
@@ -125,7 +120,6 @@ const imagesProducts = {
     amount: 4999,
     name: "Five Thousand Images",
     quantity: 1,
-    tax_code: "txcd_10501000",
   },
   10000: {
     currency: "USD",
@@ -138,7 +132,6 @@ const imagesProducts = {
     amount: 2999,
     name: "One Thousand Images",
     quantity: 1,
-    tax_code: "txcd_10501000",
   },
 };
 
