@@ -35,7 +35,7 @@ const port = process.env.PORT || 5000;
 const whitelist = ["https://123-nft.io", "https://dashboard.stripe.com/"];
 
 app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Origin", whitelist);
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
