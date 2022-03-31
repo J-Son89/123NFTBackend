@@ -93,6 +93,7 @@ app.post(
     );
 
     const result = await addOrderDataToDatabase(orderID, req.body);
+    res.setHeader("Access-Control-Allow-Origin", "*");
 
     return res.send(session);
   }
