@@ -2,7 +2,6 @@ const express = require("express");
 const app = express();
 const { get } = require("lodash");
 const bodyParser = require("body-parser");
-const cors = require("cors");
 const http = require("http");
 const {
   generateUploadURL,
@@ -18,7 +17,6 @@ const {
   getOpenPaidOrdersFromDatabase,
 } = require("./database");
 const { createStripeSession } = require("./stripe");
-const spawn = require("child_process").spawn;
 const fetch = require("node-fetch");
 const dotenv = require("dotenv");
 const { sendEmail } = require("./email");
@@ -27,13 +25,11 @@ dotenv.config();
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-const jsonParser = bodyParser.json();
 
 const port = process.env.PORT || 5000;
 
 const frontendURL = process.env.FRONTEND_URL;
 
-const whitelist = [frontendURL, "https://dashboard.stripe.com/"];
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", frontendURL);
 
@@ -42,23 +38,9 @@ app.use(function (req, res, next) {
     "Origin, X-Requested-With, Content-Type, Accept"
   );
 
-  // cors({
-  //   origin: function (origin, callback) {
-  //     // allow requests with no origin
-  //     if (!origin) return callback(null, true);
-  //     if (whitelist.indexOf(origin) === -1) {
-  //       var message =
-  //         "The CORS policy for this origin doesn't " +
-  //         "allow access from the particular origin.";
-  //       return callback(new Error(message), false);
-  //     }
-  //     return callback(null, true);
-  //   },
-  // });
   next();
 });
 
-const router = express.Router();
 
 app.get("/getURLPrefix", async (req, res) => {
   const urlPrefix = await getURLPrefix();
@@ -108,7 +90,7 @@ const getEmailPaymnetFailedText = ({ customerId }) => {
 };
 
 const fulfillOrder = async (orderData, id) => {
-  const result = await fetch(`${process.env.GENERATE_URL}/generateOrderz`, {
+  const result = await fetch(`${process.env.GENERATE_URL}/generateOrder`, {
     method: "POST",
     body: JSON.stringify({ data: orderData }),
     headers: { "Content-Type": "application/json" },
