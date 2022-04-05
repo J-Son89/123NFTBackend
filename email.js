@@ -9,13 +9,7 @@ const path = require("path");
  * @param {String} subject - Subject of the email
  * @param {String} text - Email body
  */
-const sendEmail = async ({
-  from,
-  to = "jamiecaprani@gmail.com",
-  subject,
-  text,
-}) => {
-  console.log("EMAIL_USER", process.env.EMAIL_USER);
+const sendEmail = async ({ from, to, subject, text }) => {
   try {
     // Create a transporter
     let transporter = nodemailer.createTransport({
@@ -29,8 +23,8 @@ const sendEmail = async ({
         pass: process.env.EMAIL_PASS,
       },
       tls: {
-        ciphers:'SSLv3'
-    }
+        ciphers: "SSLv3",
+      },
     });
 
     // send mail with defined transport object
@@ -39,12 +33,12 @@ const sendEmail = async ({
       to: to, // list of receivers
       subject: subject, // Subject line
       text: text, // plain text body
-    //   html: {
-    //     path: path.resolve(__dirname, "../template/mail.html"),
-    //   },
+      //   html: {
+      //     path: path.resolve(__dirname, "../template/mail.html"),
+      //   },
     });
 
-    console.log(`Message sent: ${info.messageId}`);
+    console.log(`Message sent: ${info.messageId}, to ${to}`);
     return `Message sent: ${info.messageId}`;
   } catch (error) {
     console.error(error);
