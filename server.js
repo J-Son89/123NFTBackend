@@ -20,7 +20,6 @@ const {
 const { createStripeSession } = require("./stripe");
 const spawn = require("child_process").spawn;
 const fetch = require("node-fetch");
-const { getGeneratorEndpoint } = require("./generatorEndpoints");
 const dotenv = require("dotenv");
 const { sendEmail } = require("./email");
 
@@ -32,10 +31,11 @@ const jsonParser = bodyParser.json();
 
 const port = process.env.PORT || 5000;
 
-const whitelist = ["https://123-nft.io", "https://dashboard.stripe.com/"];
+const frontendURL = process.env.FRONTEND_URL;
 
+const whitelist = [frontendURL, "https://dashboard.stripe.com/"];
 app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "https://123-nft.io");
+  res.header("Access-Control-Allow-Origin", frontendURL);
 
   res.header(
     "Access-Control-Allow-Headers",
@@ -93,7 +93,7 @@ app.post(
     );
 
     const result = await addOrderDataToDatabase(orderID, req.body);
-    res.setHeader("Access-Control-Allow-Origin", "https://123-nft.io");
+    res.setHeader("Access-Control-Allow-Origin", frontendURL);
 
     return res.send(session);
   }
@@ -108,12 +108,19 @@ const getEmailPaymnetFailedText = ({ customerId }) => {
 };
 
 const fulfillOrder = async (orderData, id) => {
-  const result = await fetch(`${getGeneratorEndpoint()}/generateOrder`, {
+  const result = await fetch(`${process.env.GENERATE_URL}/generateOrderz`, {
     method: "POST",
     body: JSON.stringify({ data: orderData }),
     headers: { "Content-Type": "application/json" },
   });
-  console.log("result", result);
+  if (get(result, "status") !== 200) {
+    return sendEmail({
+      to: process.env.ADMIN_EMAIL_ACC,
+      subject: `Issue with order id: ${id}`,
+      text: JSON.stringify(result),
+    });
+  }
+
   await markDatabaseOrderAsDelivered(id);
   const collectionName = get(
     orderData,
