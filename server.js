@@ -145,7 +145,6 @@ const fulfillOrder = async (orderData, id) => {
     ])} metadata is being processed and will be with you shortly.\n\nThanks,\n123NFT`,
   });
   markDatabaseOrderAsFulfilling(id);
-  collectionDetails.totalImages;
 };
 
 const changeOrderToPaidAndFulfill = async (session) => {

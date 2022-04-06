@@ -115,6 +115,7 @@ const markDatabaseOrderAsDelivered = async (orderId) => {
   const collection = client.db("Development").collection("Orders");
   const query = {
     _id: String(orderId),
+    orderStatus: "Fulfilling",
   };
   const newValues = {
     $set: {
@@ -127,11 +128,13 @@ const markDatabaseOrderAsDelivered = async (orderId) => {
       console.log(err);
     } else {
       console.log("Customer Order Delivered");
-      client.close();
     }
   });
   return collection
-    .findOne(query)
+    .findOne({
+      _id: String(orderId),
+      orderStatus: "Paid",
+    })
     .then((result) => {
       if (result) {
         console.log(`Successfully found document: ${result}.`);
@@ -149,6 +152,7 @@ const markDatabaseOrderAsFulfilling = async (orderId) => {
   const collection = client.db("Development").collection("Orders");
   const query = {
     _id: String(orderId),
+    orderStatus: "Paid",
   };
   const newValues = {
     $set: {
@@ -164,17 +168,6 @@ const markDatabaseOrderAsFulfilling = async (orderId) => {
       client.close();
     }
   });
-  return collection
-    .findOne(query)
-    .then((result) => {
-      if (result) {
-        console.log(`Successfully found document: ${result}.`);
-      } else {
-        console.log("No document matches the provided query.");
-      }
-      return result;
-    })
-    .catch((err) => console.error(`Failed to find document: ${err}`));
 };
 
 const getOrderDataFromDatabase = async (orderId = "1234") => {
@@ -219,5 +212,5 @@ module.exports = {
   markDatabaseOrderAsDelivered,
   getOrderDataFromDatabase,
   getOpenPaidOrdersFromDatabase,
-  markDatabaseOrderAsFulfilling
+  markDatabaseOrderAsFulfilling,
 };
