@@ -100,7 +100,7 @@ app.post(
       to: orderData.customerEmail,
       subject: "Your NFT Collection is ready",
       text: getEmailLinkText({
-        customerId: orderData.customerId,
+        orderID: orderID,
         downloadLink: String(downloadLink),
       }),
     });
@@ -109,8 +109,8 @@ app.post(
   }
 );
 
-const getEmailLinkText = ({ customerId, downloadLink }) => {
-  return `Hi,\nThank you for ordering with 123NFT.\n\nYour order - #${customerId} can be downloaded at the following link: \n${downloadLink}. \n\n This link will remain valid for 7 days. \n\n Regards, \n\n 123NFT `;
+const getEmailLinkText = ({ orderID, downloadLink }) => {
+  return `Hi,\nThank you for ordering with 123NFT.\n\nYour order - #${orderID} can be downloaded at the following link: \n${downloadLink}. \n\n This link will remain valid for 7 days. \n\n Regards, \n\n 123NFT `;
 };
 
 const getEmailPaymnetFailedText = ({ customerId }) => {
