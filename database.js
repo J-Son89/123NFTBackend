@@ -4,6 +4,9 @@ const Order = require("./models/Order");
 dotenv.config();
 
 const PAID = "Paid";
+const FULFILLING = "Fulfilling";
+const QUOTED = "Quoted";
+const DELIVERED = "Delivered";
 
 const uri = process.env.DB_URI;
 const client = new MongoClient(uri, {
@@ -24,7 +27,7 @@ const addOrderDataToDatabase = async (orderID, orderData) => {
     customerName: null,
     customerEmail: null,
     orderDateTimeCreated: Date.now(),
-    orderStatus: "Quoted",
+    orderStatus: QUOTED,
     orderDateTimeStatusLastUpdated: Date.now(),
     orderData: orderData,
     _id: String(orderID),
@@ -64,7 +67,7 @@ const markDatabaseOrderAsCancelled = async (orderId = "1234") => {
 };
 
 const markDatabaseOrderAsPaid = async (
-  orderId = "1234",
+  orderId,
   { customerId, customerName, customerEmail }
 ) => {
   const x = await client.connect();
@@ -115,11 +118,11 @@ const markDatabaseOrderAsDelivered = async (orderId) => {
   const collection = client.db("Development").collection("Orders");
   const query = {
     _id: String(orderId),
-    orderStatus: "Fulfilling",
+    orderStatus: FULFILLING,
   };
   const newValues = {
     $set: {
-      orderStatus: "Delivered",
+      orderStatus: DELIVERED,
       orderDateTimeStatusLastUpdated: Date.now(),
     },
   };
@@ -133,7 +136,7 @@ const markDatabaseOrderAsDelivered = async (orderId) => {
   return collection
     .findOne({
       _id: String(orderId),
-      orderStatus: "Paid",
+      orderStatus: PAID,
     })
     .then((result) => {
       if (result) {
@@ -152,11 +155,11 @@ const markDatabaseOrderAsFulfilling = async (orderId) => {
   const collection = client.db("Development").collection("Orders");
   const query = {
     _id: String(orderId),
-    orderStatus: "Paid",
+    orderStatus: PAID,
   };
   const newValues = {
     $set: {
-      orderStatus: "Fulfilling",
+      orderStatus: FULFILLING,
       orderDateTimeStatusLastUpdated: Date.now(),
     },
   };
@@ -196,7 +199,14 @@ const getOpenPaidOrdersFromDatabase = async () => {
 
   const collection = client.db("Development").collection("Orders");
   const query = {
-    orderStatus: PAID,
+    $or: [
+      {
+        orderStatus: PAID,
+      },
+      {
+        orderStatus: FULFILLING,
+      },
+    ],
   };
 
   const orders = await collection.find(query).toArray();
