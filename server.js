@@ -104,7 +104,8 @@ app.post(
         downloadLink: String(downloadLink),
       }),
     });
-    return;
+    response.json({ received: true });
+    response.status(200);
   }
 );
 
