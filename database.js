@@ -136,7 +136,7 @@ const markDatabaseOrderAsDelivered = async (orderId) => {
   return collection
     .findOne({
       _id: String(orderId),
-      orderStatus: PAID,
+      orderStatus: DELIVERED,
     })
     .then((result) => {
       if (result) {
