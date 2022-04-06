@@ -85,7 +85,6 @@ app.post(
   bodyParser.json({ limit: "5mb" }),
   async (req, res) => {
     const orderID = get(req.body, "orderID");
-    console.log('req',req.body)
     res.setHeader("Access-Control-Allow-Origin", process.env.GENERATE_URL);
 
     const orderData = await markDatabaseOrderAsDelivered(orderID);
@@ -104,8 +103,8 @@ app.post(
         downloadLink: String(downloadLink),
       }),
     });
-    response.json({ received: true });
-    response.status(200);
+    res.json({ received: true });
+    res.status(200);
   }
 );
 
