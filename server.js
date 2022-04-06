@@ -15,6 +15,7 @@ const {
   markDatabaseOrderAsDelivered,
   getOrderDataFromDatabase,
   getOpenPaidOrdersFromDatabase,
+  markDatabaseOrderAsFulfilling,
 } = require("./database");
 const { createStripeSession } = require("./stripe");
 const fetch = require("node-fetch");
@@ -24,7 +25,6 @@ const { sendEmail } = require("./email");
 dotenv.config();
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
 
 const port = process.env.PORT || 5000;
 
@@ -40,7 +40,6 @@ app.use(function (req, res, next) {
 
   next();
 });
-
 
 app.get("/getURLPrefix", async (req, res) => {
   const urlPrefix = await getURLPrefix();
@@ -81,6 +80,34 @@ app.post(
   }
 );
 
+app.post(
+  "/orderComplete",
+  bodyParser.json({ limit: "5mb" }),
+  async (req, res) => {
+    const orderID = get(req.body, "orderID");
+
+    res.setHeader("Access-Control-Allow-Origin", process.env.GENERATE_URL);
+
+    const orderData = await markDatabaseOrderAsDelivered(orderID);
+    const collectionName = get(orderData, [
+      "orderData",
+      "collectionDetails",
+      "collectionName",
+    ]);
+    const s3Key = `${orderID}/order/${collectionName}.zip`;
+    const downloadLink = await generateDownloadURL(s3Key);
+    await sendEmail({
+      to: orderData.customerEmail,
+      subject: "Your NFT Collection is ready",
+      text: getEmailLinkText({
+        customerId: orderData.customerId,
+        downloadLink: String(downloadLink),
+      }),
+    });
+    return;
+  }
+);
+
 const getEmailLinkText = ({ customerId, downloadLink }) => {
   return `Hi,\nThank you for ordering with 123NFT.\n\nYour order - #${customerId} can be downloaded at the following link: \n${downloadLink}. \n\n This link will remain valid for 7 days. \n\n Regards, \n\n 123NFT `;
 };
@@ -103,22 +130,22 @@ const fulfillOrder = async (orderData, id) => {
     });
   }
 
-  await markDatabaseOrderAsDelivered(id);
-  const collectionName = get(
-    orderData,
-    ["orderData", "collectionDetails", "collectionName"],
-    id
-  );
-  const s3Key = `${id}/order/${collectionName}.zip`;
-  const downloadLink = await generateDownloadURL(s3Key);
   await sendEmail({
     to: orderData.customerEmail,
-    subject: "Your NFT Collection is ready",
-    text: getEmailLinkText({
-      customerId: orderData.customerId,
-      downloadLink: String(downloadLink),
-    }),
+    subject: `Your Order with 123NFT has been received`,
+    text: `Your Order (#${id}) of ${get(orderData, [
+      "orderData",
+      "collectionDetails",
+      "totalImages",
+    ])} images and ${get(orderData, [
+      "orderData",
+      "orderDetails",
+      "metadata",
+      "value",
+    ])} metadata is being processed and will be with you shortly.\n\nThanks,\n123NFT`,
   });
+  markDatabaseOrderAsFulfilling(id);
+  collectionDetails.totalImages;
 };
 
 const changeOrderToPaidAndFulfill = async (session) => {

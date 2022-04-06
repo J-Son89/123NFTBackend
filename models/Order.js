@@ -25,7 +25,7 @@ const orderSchema = new Schema({
   },
   orderStatus: {
     required: true,
-    type: ["Quoted", "Paid", "Delivered", "Cancelled"],
+    type: ["Quoted", "Paid", "Fulfilling", "Delivered", "Cancelled"],
   },
   orderData: {
     required: true,

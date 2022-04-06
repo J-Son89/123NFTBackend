@@ -130,6 +130,51 @@ const markDatabaseOrderAsDelivered = async (orderId) => {
       client.close();
     }
   });
+  return collection
+    .findOne(query)
+    .then((result) => {
+      if (result) {
+        console.log(`Successfully found document: ${result}.`);
+      } else {
+        console.log("No document matches the provided query.");
+      }
+      return result;
+    })
+    .catch((err) => console.error(`Failed to find document: ${err}`));
+};
+
+const markDatabaseOrderAsFulfilling = async (orderId) => {
+  const x = await client.connect();
+
+  const collection = client.db("Development").collection("Orders");
+  const query = {
+    _id: String(orderId),
+  };
+  const newValues = {
+    $set: {
+      orderStatus: "Fulfilling",
+      orderDateTimeStatusLastUpdated: Date.now(),
+    },
+  };
+  collection.updateOne(query, newValues, (err, res) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("Customer Order Being Processed");
+      client.close();
+    }
+  });
+  return collection
+    .findOne(query)
+    .then((result) => {
+      if (result) {
+        console.log(`Successfully found document: ${result}.`);
+      } else {
+        console.log("No document matches the provided query.");
+      }
+      return result;
+    })
+    .catch((err) => console.error(`Failed to find document: ${err}`));
 };
 
 const getOrderDataFromDatabase = async (orderId = "1234") => {
@@ -174,4 +219,5 @@ module.exports = {
   markDatabaseOrderAsDelivered,
   getOrderDataFromDatabase,
   getOpenPaidOrdersFromDatabase,
+  markDatabaseOrderAsFulfilling
 };
