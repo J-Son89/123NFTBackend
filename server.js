@@ -129,22 +129,23 @@ const fulfillOrder = async (orderData, id) => {
       text: JSON.stringify(result),
     });
   }
-
-  await sendEmail({
-    to: orderData.customerEmail,
-    subject: `Your Order with 123NFT has been received`,
-    text: `Your Order (#${id}) of ${get(orderData, [
-      "orderData",
-      "collectionDetails",
-      "totalImages",
-    ])} images and ${get(orderData, [
-      "orderData",
-      "orderDetails",
-      "metadata",
-      "value",
-    ])} metadata is being processed and will be with you shortly.\n\nThanks,\n123NFT`,
-  });
-  markDatabaseOrderAsFulfilling(id);
+  if (get(orderData, "orderStatus") == "Paid") {
+    await sendEmail({
+      to: orderData.customerEmail,
+      subject: `Your Order with 123NFT has been received`,
+      text: `Your Order (#${id}) of ${get(orderData, [
+        "orderData",
+        "collectionDetails",
+        "totalImages",
+      ])} images and ${get(orderData, [
+        "orderData",
+        "orderDetails",
+        "metadata",
+        "value",
+      ])} metadata is being processed and will be with you shortly.\n\nThanks,\n123NFT`,
+    });
+    markDatabaseOrderAsFulfilling(id);
+  }
 };
 
 const changeOrderToPaidAndFulfill = async (session) => {
