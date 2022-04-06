@@ -85,7 +85,7 @@ app.post(
   bodyParser.json({ limit: "5mb" }),
   async (req, res) => {
     const orderID = get(req.body, "orderID");
-    console.log('req',req)
+    console.log('req',req.body)
     res.setHeader("Access-Control-Allow-Origin", process.env.GENERATE_URL);
 
     const orderData = await markDatabaseOrderAsDelivered(orderID);
