@@ -11,7 +11,7 @@ const createStripeSession = async (totalImages, metadataFormat, orderID) => {
     line_items: [imageProduct, metadataProduct],
     client_reference_id: orderID,
     mode: "payment",
-    success_url: "https://123-nft.io",
+    success_url: `https://123-nft.io/success?orderID=${orderID}&totalImages=${totalImages}&metadataProduct=${metadataFormat} `,
     cancel_url: "https://123-nft.io",
     discounts: [
       {
