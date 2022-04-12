@@ -15,7 +15,7 @@ const createStripeSession = async (totalImages, metadataFormat, orderID) => {
     cancel_url: "https://123-nft.io",
     discounts: [
       {
-        coupon: "xiq8xOOp",
+        coupon: "oXxLt7bN",
       },
     ],
     // expire,
